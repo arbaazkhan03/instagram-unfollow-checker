@@ -158,6 +158,13 @@
   .sitelinks a:hover{text-decoration:underline}
   .burst{font-size:.85rem;margin:4px 0;color:var(--muted)}
   .burst b{color:var(--txt)}
+  #faqCard details{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:var(--card2)}
+  #faqCard summary{cursor:pointer;font-weight:600;font-size:.92rem}
+  #faqCard details p{margin:8px 0 2px}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--brand);color:#fff;
+         padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.35);
+         opacity:0;transition:opacity .2s;z-index:50;pointer-events:none}
+  .toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -176,7 +183,11 @@
       <div class="small">or drag &amp; drop here</div>
     </div>
     <input id="fileInput" type="file" multiple accept=".zip,.json,application/json,application/zip">
-    <button class="btn secondary" id="pickBtn" type="button">Choose files</button>
+    <div class="btns">
+      <button class="btn secondary" id="pickBtn" type="button">Choose files</button>
+      <button class="btn secondary" id="demoBtn" type="button">▶ Try with sample data</button>
+    </div>
+    <p class="small" style="margin-top:8px">Curious first? Tap <b>Try with sample data</b> to see how it works — no download needed.</p>
 
     <details style="margin-top:14px">
       <summary class="small" style="cursor:pointer">How do I get this file?</summary>
@@ -191,9 +202,32 @@
     <div id="uploadErr" class="err hidden"></div>
   </section>
 
+  <!-- FAQ / TRUST -->
+  <section id="faqCard" class="card">
+    <h2>How it works &amp; is it safe?</h2>
+    <details>
+      <summary>Do you get my Instagram password?</summary>
+      <p class="small">No — never. This tool works from the data file <b>you</b> download from Instagram. You never type your login anywhere here. Any tool that asks for your Instagram password is unsafe.</p>
+    </details>
+    <details>
+      <summary>Where does my data go?</summary>
+      <p class="small">Nowhere. Your file is read and compared right inside your browser, on your device. Nothing is uploaded to any server. You can even use it offline.</p>
+    </details>
+    <details>
+      <summary>Will I get banned for unfollowing?</summary>
+      <p class="small">Not if you pace it. Instagram limits rapid actions, so unfollow about <b>100–120 per day</b>. If you ever see "Try again later," stop for 24–48 hours. This tool splits your list into safe daily batches for exactly this reason.</p>
+    </details>
+    <details>
+      <summary>Is it really free?</summary>
+      <p class="small">Yes, completely free. If it helped, you can follow or buy me a coffee (links at the bottom) — but that's optional.</p>
+    </details>
+    <button class="btn secondary" id="shareBtn2" type="button" style="margin-top:12px">🔗 Share this tool</button>
+  </section>
+
   <!-- RESULTS -->
   <section id="resultCard" class="card hidden">
     <h2>2. People who don't follow you back</h2>
+    <div id="demoBanner" class="info hidden" style="margin-bottom:10px">👀 <b>Sample data</b> — this is a demo so you can see how it works. Add your own Instagram data to get your real list. <a class="tlink" href="#" id="exitDemo">Exit demo</a></div>
     <div class="stats">
       <div class="stat"><div class="n" id="sFollowing">0</div><div class="l">Following</div></div>
       <div class="stat"><div class="n" id="sFollowers">0</div><div class="l">Followers</div></div>
@@ -210,6 +244,7 @@
       <button class="btn secondary" id="dlCsv" type="button">CSV</button>
       <button class="btn secondary" id="dlTxt" type="button">TXT</button>
     </div>
+    <button class="btn secondary" id="shareBtn" type="button" style="margin-top:10px">🔗 Share this tool with friends</button>
     <p class="small" style="margin-top:10px">The HTML download is a clickable page with direct profile links, split into ~<span id="batchLbl">120</span>/day batches.</p>
     <div class="note" style="margin-top:12px"><b>Tip:</b> Log into Instagram in this same browser first. Then tapping a name takes you straight to that profile, ready to tap <b>Following &rarr; Unfollow</b>.</div>
   </section>
@@ -268,9 +303,11 @@
     </div>
   </footer>
 </div>
+<div id="toast" class="toast"></div>
 
 <script>
 const BATCH = 120;
+const SHARE_URL = "https://arbaazkhan03.github.io/instagram-unfollow-checker/";
 const LS_KEY = "wdfb_progress_v1";
 const LS_KEEP = "wdfb_keep_v1";
 const LS_THEME = "wdfb_theme_v1";
@@ -283,6 +320,7 @@ let names = [];                   // working list (allNotBack minus kept), after
 let done = new Set();
 let kept = new Set();
 let curSort = "az";
+let demoMode = false;
 
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -291,8 +329,8 @@ function loadSets(){
   try{ done = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]")); }catch{ done = new Set(); }
   try{ kept = new Set(JSON.parse(localStorage.getItem(LS_KEEP) || "[]")); }catch{ kept = new Set(); }
 }
-function saveDone(){ localStorage.setItem(LS_KEY, JSON.stringify([...done])); }
-function saveKept(){ localStorage.setItem(LS_KEEP, JSON.stringify([...kept])); }
+function saveDone(){ if(demoMode) return; localStorage.setItem(LS_KEY, JSON.stringify([...done])); }
+function saveKept(){ if(demoMode) return; localStorage.setItem(LS_KEEP, JSON.stringify([...kept])); }
 
 /* ---------- theme ---------- */
 function applyTheme(t){
@@ -350,6 +388,8 @@ function parseFollowingWithTs(obj){
 /* ---------- ingest ---------- */
 async function handleFiles(fileList){
   clearErr();
+  demoMode = false;
+  $("demoBanner").classList.add("hidden");
   const files = [...fileList];
   if(files.length === 0) return;
 
@@ -499,6 +539,7 @@ function recompute(){
 function render(){
   ["resultCard","safetyCard","listCard"].forEach(id=>$(id).classList.remove("hidden"));
   $("uploadCard").classList.add("hidden");
+  $("faqCard").classList.add("hidden");
   $("batchLbl").textContent = BATCH;
   // recent/oldest only make sense if we have timestamps
   const hasTs = Object.keys(followTs).length > 0;
@@ -671,6 +712,62 @@ $("sort").addEventListener("change", e=>{ curSort = e.target.value; recompute();
 $("resetProg").addEventListener("click", ()=>{
   if(confirm("Clear all your checkmarks? (Your kept list stays.)")){ done = new Set(); saveDone(); buildList($("search").value); updateProgress(); }
 });
+
+/* ---------- share ---------- */
+let toastTimer;
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+async function shareTool(){
+  const data = { title: "Instagram Unfollow Checker", text: "Find who doesn't follow you back on Instagram — free, no login, no password.", url: SHARE_URL };
+  if(navigator.share){
+    try{ await navigator.share(data); }catch{ /* user cancelled */ }
+  } else {
+    try{ await navigator.clipboard.writeText(SHARE_URL); toast("Link copied to clipboard!"); }
+    catch{ prompt("Copy this link:", SHARE_URL); }
+  }
+}
+$("shareBtn").addEventListener("click", shareTool);
+$("shareBtn2").addEventListener("click", shareTool);
+
+/* ---------- demo mode ---------- */
+function loadDemo(){
+  demoMode = true;
+  clearErr();
+  const adj = ["cosmic","daily","urban","retro","sunny","midnight","hungry","lazy","brave","silent","electric","frozen","golden","wild","quiet","clever","happy","stormy","velvet","neon"];
+  const noun = ["traveler","foodie","coder","painter","runner","dreamer","gamer","baker","nomad","photographer","writer","cyclist","designer","chef","student","gardener","drummer","hiker","reader","builder"];
+  const sep = [".","_",""];
+  const set = new Set();
+  let seed = 7;
+  const rnd = ()=> (seed = (seed*9301 + 49297) % 233280) / 233280;
+  while(set.size < 340){
+    const u = adj[Math.floor(rnd()*adj.length)] + sep[Math.floor(rnd()*sep.length)] + noun[Math.floor(rnd()*noun.length)] + (rnd()<0.5?Math.floor(rnd()*99):"");
+    set.add(u);
+  }
+  allNotBack = [...set];
+
+  // fake follow timestamps over ~2 years, plus one automation-style burst to show the feature
+  const now = Math.floor(Date.now()/1000);
+  const twoYears = 2*365*24*3600;
+  followTs = {};
+  allNotBack.forEach((u,i)=>{ followTs[u] = now - Math.floor(rnd()*twoYears); });
+  const burstStart = now - 30*24*3600;
+  allNotBack.slice(0,12).forEach((u,i)=>{ followTs[u] = burstStart + i*3; }); // 12 follows in ~36s
+
+  // build a synthetic following object so the bot analysis card works
+  const demoFollowingObj = { relationships_following: allNotBack.map(u=>({ string_list_data:[{ value:u, timestamp: followTs[u] }] })) };
+
+  $("sFollowing").textContent = allNotBack.length + 190;   // pretend some mutuals too
+  $("sFollowers").textContent = 190 + 470;
+
+  done = new Set(); kept = new Set();
+  buildBotAnalysis(demoFollowingObj);
+  render();
+  $("demoBanner").classList.remove("hidden");
+}
+$("demoBtn").addEventListener("click", loadDemo);
+$("exitDemo").addEventListener("click", e=>{ e.preventDefault(); location.reload(); });
 
 /* ---------- offline support ---------- */
 if("serviceWorker" in navigator){
