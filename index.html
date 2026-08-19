@@ -170,6 +170,9 @@
   .tl .bar{width:100%;max-width:34px;background:linear-gradient(180deg,var(--brand),var(--brand2));border-radius:6px 6px 0 0;min-height:2px}
   .tl .lab{font-size:.68rem;color:var(--muted);margin-top:5px}
   .tl .val{font-size:.66rem;color:var(--txt);margin-bottom:3px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:60;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
+  .modal-inner{width:100%;max-width:380px;margin:auto}
+  .modal-inner img{width:100%;border-radius:16px;display:block;box-shadow:0 10px 40px rgba(0,0,0,.5)}
   .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--brand);color:#fff;
          padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.35);
          opacity:0;transition:opacity .2s;z-index:50;pointer-events:none}
@@ -332,6 +335,19 @@
   </footer>
 </div>
 <div id="toast" class="toast"></div>
+
+<!-- Stats card preview modal -->
+<div id="cardModal" class="modal hidden">
+  <div class="modal-inner">
+    <img id="cardImg" alt="Your Instagram stats card">
+    <p class="small" id="cardHint" style="text-align:center;margin:10px 0 4px">Long-press the image to save it, or use the buttons below.</p>
+    <div class="btns">
+      <button class="btn" id="cardDownload" type="button">⬇️ Download image</button>
+      <button class="btn secondary hidden" id="cardShare" type="button">📤 Share</button>
+    </div>
+    <button class="btn secondary" id="cardClose" type="button" style="margin-top:8px">Close</button>
+  </div>
+</div>
 
 <script>
 const BATCH = 120;
@@ -915,32 +931,45 @@ function statsCardBlob(){
   return new Promise(res => c.toBlob(res, "image/png"));
 }
 let cardBusy = false;
-async function shareStatsCard(){
-  if(cardBusy) return;            // ignore rapid double taps
+let cardBlob = null;
+let cardUrl = null;
+
+async function openStatsCard(){
+  if(cardBusy) return;
   cardBusy = true;
-  const btn = $("statsCardBtn"); btn.disabled = true;
+  const btn = $("statsCardBtn"); const label = btn.textContent; btn.disabled = true; btn.textContent = "Creating…";
   try{
-    await doShareStatsCard();
+    cardBlob = await statsCardBlob();
+    if(!cardBlob){ toast("Couldn't create the image."); return; }
+    if(cardUrl) URL.revokeObjectURL(cardUrl);
+    cardUrl = URL.createObjectURL(cardBlob);
+    $("cardImg").src = cardUrl;
+    // show native share button only if this device can share image files
+    const canShareFile = navigator.share && navigator.canShare &&
+      navigator.canShare({ files:[ new File([cardBlob], "s.png", {type:"image/png"}) ] });
+    $("cardShare").classList.toggle("hidden", !canShareFile);
+    $("cardModal").classList.remove("hidden");
   } finally {
-    cardBusy = false; btn.disabled = false;
+    cardBusy = false; btn.disabled = false; btn.textContent = label;
   }
 }
-async function doShareStatsCard(){
-  const blob = await statsCardBlob();
-  if(!blob){ toast("Couldn't create the image."); return; }
-  const file = new File([blob], "my-instagram-stats.png", { type: "image/png" });
-  if(navigator.canShare && navigator.canShare({ files:[file] })){
-    try{ await navigator.share({ files:[file], title:"My Instagram Reality Check" }); return; }
-    catch(e){ if(e && e.name === "AbortError") return; }
-  }
-  // fallback: download the image
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = "my-instagram-stats.png";
+function closeCard(){ $("cardModal").classList.add("hidden"); }
+
+$("statsCardBtn").addEventListener("click", openStatsCard);
+$("cardClose").addEventListener("click", closeCard);
+$("cardModal").addEventListener("click", e=>{ if(e.target.id === "cardModal") closeCard(); });
+$("cardDownload").addEventListener("click", ()=>{
+  if(!cardBlob) return;
+  const a = document.createElement("a"); a.href = cardUrl; a.download = "my-instagram-stats.png";
   document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 1500);
-  toast("Image saved — post it to your story!");
-}
-$("statsCardBtn").addEventListener("click", shareStatsCard);
+  toast("Image downloaded!");
+});
+$("cardShare").addEventListener("click", async ()=>{
+  if(!cardBlob) return;
+  const file = new File([cardBlob], "my-instagram-stats.png", { type: "image/png" });
+  try{ await navigator.share({ files:[file], title:"My Instagram Family" }); }
+  catch(e){ /* cancelled */ }
+});
 
 /* ---------- demo mode ---------- */
 function loadDemo(){
