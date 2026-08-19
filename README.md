@@ -63,3 +63,16 @@ Made by **Arbaaz**. Questions, feedback, or ideas? Reach out:
 - Email: `iam.arbaazkhan03 [at] gmail [dot] com`
 - Instagram: [@just_an_engineer.mlk](https://www.instagram.com/just_an_engineer.mlk)
 - LinkedIn: [arbaaz-khan03](https://www.linkedin.com/in/arbaaz-khan03/)
+
+## License
+
+Released under the [MIT License](LICENSE) — free to use, modify, and share, just
+keep the copyright notice. © 2026 Arbaaz Khan.
+
+## ⚠️ Use at your own risk
+
+This is a personal, unofficial tool with no warranty of any kind. It is not
+affiliated with, endorsed by, or connected to Instagram or Meta. You are
+responsible for how you use it — including respecting Instagram's Terms of
+Service and unfollowing at a sensible pace (~100–120/day). The author is not
+liable for any account limits, blocks, or other issues that may result.
