@@ -55,3 +55,11 @@ Instagram emails a download link, usually within a few minutes to a day.
 
 This is a static site. All parsing happens client-side in your browser. No
 analytics, no server, no data collection. Not affiliated with Instagram or Meta.
+
+## Contact
+
+Made by **Arbaaz**. Questions, feedback, or ideas? Reach out:
+
+- Email: iam.arbaazkhan03@gmail.com
+- Instagram: [@just_an_engineer.mlk](https://www.instagram.com/just_an_engineer.mlk)
+- LinkedIn: [arbaaz-khan03](https://www.linkedin.com/in/arbaaz-khan03/)
