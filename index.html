@@ -161,6 +161,15 @@
   #faqCard details{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:var(--card2)}
   #faqCard summary{cursor:pointer;font-weight:600;font-size:.92rem}
   #faqCard details p{margin:8px 0 2px}
+  #fansBox{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--card2)}
+  #fansBox .frow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)}
+  #fansBox .frow:last-child{border-bottom:0}
+  #fansBox a{color:var(--link);text-decoration:none;word-break:break-all}
+  .tl{display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:6px}
+  .tl .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .tl .bar{width:100%;max-width:34px;background:linear-gradient(180deg,var(--brand),var(--brand2));border-radius:6px 6px 0 0;min-height:2px}
+  .tl .lab{font-size:.68rem;color:var(--muted);margin-top:5px}
+  .tl .val{font-size:.66rem;color:var(--txt);margin-bottom:3px}
   .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--brand);color:#fff;
          padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.35);
          opacity:0;transition:opacity .2s;z-index:50;pointer-events:none}
@@ -232,6 +241,7 @@
       <div class="stat"><div class="n" id="sFollowing">0</div><div class="l">Following</div></div>
       <div class="stat"><div class="n" id="sFollowers">0</div><div class="l">Followers</div></div>
       <div class="stat hi"><div class="n" id="sDiff">0</div><div class="l">Not back</div></div>
+      <div class="stat"><div class="n" id="sMutual">0</div><div class="l">Mutuals</div></div>
       <div class="stat"><div class="n" id="sKept">0</div><div class="l">Kept</div></div>
     </div>
 
@@ -253,6 +263,22 @@
   <section id="botCard" class="card hidden">
     <h2>Follow activity check</h2>
     <div id="botBody"></div>
+  </section>
+
+  <!-- INSIGHTS: FANS + TIMELINE -->
+  <section id="insightsCard" class="card hidden">
+    <h2>More insights</h2>
+
+    <div id="fansWrap">
+      <p class="small" id="fansLine" style="margin:0 0 6px"></p>
+      <button class="btn secondary" id="fansToggle" type="button">Show fans list</button>
+      <div id="fansBox" class="hidden" style="margin-top:8px"></div>
+    </div>
+
+    <div id="timelineWrap" style="margin-top:18px">
+      <div class="h" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">When you followed people</div>
+      <div id="timeline"></div>
+    </div>
   </section>
 
   <!-- SAFETY -->
@@ -321,6 +347,8 @@ let done = new Set();
 let kept = new Set();
 let curSort = "az";
 let demoMode = false;
+let mutualsCount = 0;
+let fansList = [];
 
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -442,6 +470,8 @@ async function handleFiles(fileList){
   for(const o of followerObjs) for(const n of usernamesFromEntries(followerEntries(o))) followers.add(n);
 
   allNotBack = [...following].filter(n => !followers.has(n));
+  mutualsCount = [...following].filter(n => followers.has(n)).length;
+  fansList = [...followers].filter(n => !following.has(n)).sort((a,b)=>a.localeCompare(b));
 
   $("sFollowing").textContent = following.size;
   $("sFollowers").textContent = followers.size;
@@ -521,6 +551,75 @@ function buildBotAnalysis(followingObj){
   $("botCard").classList.remove("hidden");
 }
 
+/* ---------- insights: mutuals, fans, timeline ---------- */
+function buildInsights(){
+  $("sMutual").textContent = mutualsCount;
+
+  // Fans
+  const fw = $("fansWrap");
+  if(fansList.length === 0){
+    fw.classList.add("hidden");
+  } else {
+    fw.classList.remove("hidden");
+    $("fansLine").innerHTML = `<b>${fansList.length}</b> ${fansList.length===1?"person follows":"people follow"} you that you don't follow back.`;
+    $("fansBox").classList.add("hidden");
+    $("fansToggle").textContent = "Show fans list";
+    $("fansBox").innerHTML = "";
+  }
+
+  // Timeline of follows by year
+  const times = Object.values(followTs).filter(Boolean);
+  const tw = $("timelineWrap");
+  if(times.length === 0){ tw.classList.add("hidden"); $("insightsCard").classList.toggle("hidden", fansList.length===0); return; }
+  tw.classList.remove("hidden");
+  const dates = times.map(t => new Date(t*1000));
+  const years = [...new Set(dates.map(d => d.getFullYear()))];
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const buckets = [];  // {label, count}
+
+  if(years.length <= 1){
+    // group by month within the single active year
+    const y = years[0];
+    const byMonth = {};
+    for(const d of dates){ const mo = d.getMonth(); byMonth[mo] = (byMonth[mo]||0)+1; }
+    const mos = Object.keys(byMonth).map(Number);
+    const minMo = Math.min(...mos), maxMo = Math.max(...mos);
+    for(let mo=minMo; mo<=maxMo; mo++) buckets.push({ label: MONTHS[mo], count: byMonth[mo]||0, title:`${byMonth[mo]||0} follows in ${MONTHS[mo]} ${y}` });
+  } else {
+    const byYear = {};
+    for(const d of dates){ const y=d.getFullYear(); byYear[y]=(byYear[y]||0)+1; }
+    const minY = Math.min(...years), maxY = Math.max(...years);
+    for(let y=minY; y<=maxY; y++) buckets.push({ label: String(y).slice(2), count: byYear[y]||0, title:`${byYear[y]||0} follows in ${y}` });
+  }
+
+  const max = Math.max(...buckets.map(b=>b.count), 1);
+  let html = '<div class="tl">';
+  for(const b of buckets){
+    const h = Math.round(100*b.count/max);
+    html += `<div class="col" title="${b.title}"><div class="val">${b.count||""}</div><div class="bar" style="height:${h}%"></div><div class="lab">${b.label}</div></div>`;
+  }
+  html += '</div>';
+  $("timeline").innerHTML = html;
+  $("insightsCard").classList.remove("hidden");
+}
+function renderFansList(){
+  const box = $("fansBox");
+  const cap = 1000;
+  const shown = fansList.slice(0, cap);
+  let html = "";
+  for(const n of shown){
+    html += `<div class="frow"><a href="${igUrl(n)}" target="_blank" rel="noopener">${esc(n)}</a><a class="iconbtn" href="${isMobile?igAppUrl(n):igUrl(n)}" ${isMobile?"":'target="_blank" rel="noopener"'}>Open ↗</a></div>`;
+  }
+  if(fansList.length > cap) html += `<p class="small" style="margin:8px 0 0">Showing first ${cap} of ${fansList.length}.</p>`;
+  box.innerHTML = html;
+}
+$("fansToggle").addEventListener("click", ()=>{
+  const box = $("fansBox");
+  const hidden = box.classList.contains("hidden");
+  if(hidden){ renderFansList(); box.classList.remove("hidden"); $("fansToggle").textContent = "Hide fans list"; }
+  else { box.classList.add("hidden"); $("fansToggle").textContent = "Show fans list"; }
+});
+
 /* ---------- working list ---------- */
 function recompute(){
   names = allNotBack.filter(n => !kept.has(n));
@@ -545,6 +644,7 @@ function render(){
   const hasTs = Object.keys(followTs).length > 0;
   [...$("sort").options].forEach(o=>{ if((o.value==="recent"||o.value==="oldest")) o.disabled = !hasTs; });
   recompute();
+  buildInsights();
   updateProgress();
   buildList("");
   $("search").value = "";
@@ -759,8 +859,17 @@ function loadDemo(){
   // build a synthetic following object so the bot analysis card works
   const demoFollowingObj = { relationships_following: allNotBack.map(u=>({ string_list_data:[{ value:u, timestamp: followTs[u] }] })) };
 
-  $("sFollowing").textContent = allNotBack.length + 190;   // pretend some mutuals too
-  $("sFollowers").textContent = 190 + 470;
+  // pretend some mutuals + fans for a realistic demo
+  mutualsCount = 190;
+  const fanSet = new Set();
+  while(fanSet.size < 470){
+    const u = adj[Math.floor(rnd()*adj.length)] + sep[Math.floor(rnd()*sep.length)] + noun[Math.floor(rnd()*noun.length)] + Math.floor(rnd()*999);
+    if(!set.has(u)) fanSet.add(u);
+  }
+  fansList = [...fanSet].sort((a,b)=>a.localeCompare(b));
+
+  $("sFollowing").textContent = allNotBack.length + mutualsCount;      // 340 + 190
+  $("sFollowers").textContent = mutualsCount + fansList.length;        // 190 + 470
 
   done = new Set(); kept = new Set();
   buildBotAnalysis(demoFollowingObj);
