@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Who Doesn't Follow Back</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{
+    --bg:#0a0a0f; --card:#15151f; --card2:#1d1d2a; --line:#2a2a3a;
+    --txt:#ececf2; --muted:#9a9ab0; --brand:#c724b1; --brand2:#f05f43;
+    --ok:#2fd07a; --warn:#ffcf5c; --link:#66b2ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    color:var(--txt);line-height:1.5;
+    -webkit-text-size-adjust:100%;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background:
+      radial-gradient(closest-side, rgba(199,36,177,.30), transparent 70%) -10% -5% / 70vw 70vw no-repeat,
+      radial-gradient(closest-side, rgba(240,95,67,.26), transparent 70%) 115% 8% / 65vw 65vw no-repeat,
+      radial-gradient(closest-side, rgba(249,206,52,.16), transparent 70%) 90% 105% / 60vw 60vw no-repeat,
+      radial-gradient(closest-side, rgba(102,60,255,.20), transparent 70%) -15% 115% / 65vw 65vw no-repeat,
+      radial-gradient(closest-side, rgba(47,208,122,.22), transparent 70%) 50% 55% / 55vw 55vw no-repeat,
+      var(--bg);
+    background-attachment: fixed;
+    min-height:100vh;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 96px}
+  header{text-align:center;margin:12px 0 20px}
+  .ig{
+    font-size:2rem;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;
+    background:linear-gradient(90deg,#f9ce34,var(--brand2),var(--brand));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .logo{
+    display:inline-block;font-size:1.55rem;font-weight:800;letter-spacing:-.5px;
+    background:linear-gradient(90deg,var(--brand),var(--brand2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:var(--muted);font-size:.92rem;margin-top:2px}
+
+  .card{
+    background:rgba(21,21,31,.72);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  }
+  h2{font-size:1.05rem;margin:0 0 10px}
+  p.small,.small{font-size:.86rem;color:var(--muted)}
+
+  /* Dropzone */
+  #drop{
+    border:2px dashed var(--line);border-radius:16px;padding:30px 18px;text-align:center;
+    background:var(--card2);transition:border-color .15s,background .15s;cursor:pointer;
+  }
+  #drop.hover{border-color:var(--brand);background:#22222f}
+  #drop .big{font-size:1.05rem;font-weight:700;margin-bottom:6px}
+  .btn{
+    display:inline-block;border:0;border-radius:12px;padding:13px 18px;font-size:1rem;font-weight:700;
+    background:linear-gradient(90deg,var(--brand),var(--brand2));color:#fff;cursor:pointer;
+    text-decoration:none;text-align:center;width:100%;margin-top:12px;
+  }
+  .btn.secondary{background:var(--card2);border:1px solid var(--line);color:var(--txt)}
+  .btn:active{transform:translateY(1px)}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .btns .btn{flex:1;min-width:140px}
+  input[type=file]{display:none}
+
+  /* Steps list */
+  ol.steps{margin:8px 0 0;padding-left:20px}
+  ol.steps li{margin:6px 0;font-size:.9rem;color:var(--muted)}
+  ol.steps b{color:var(--txt)}
+
+  /* Stats */
+  .stats{display:flex;gap:10px;margin:0 0 6px}
+  .stat{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+  .stat .n{font-size:1.5rem;font-weight:800}
+  .stat .l{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .stat.hi .n{color:var(--brand2)}
+
+  /* Progress */
+  .progline{display:flex;justify-content:space-between;font-size:.85rem;margin:14px 0 6px}
+  .bar{height:10px;background:var(--card2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .25s}
+  .cap{margin-top:8px;font-size:.82rem}
+  .cap.warn{color:var(--warn)}
+
+  /* Search */
+  .search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+          background:var(--card2);color:var(--txt);font-size:1rem;margin:4px 0 6px}
+  .search::placeholder{color:var(--muted)}
+
+  /* Day sections */
+  .day{margin-top:16px}
+  .day h3{font-size:.95rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:center}
+  .day h3 .c{font-size:.78rem;color:var(--muted);font-weight:500}
+  .row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);
+       border-radius:12px;margin:6px 0;background:var(--card2)}
+  .row.done{opacity:.5}
+  .row input[type=checkbox]{width:22px;height:22px;flex:0 0 auto;accent-color:var(--brand)}
+  .row a{color:var(--link);text-decoration:none;font-size:.98rem;word-break:break-all;flex:1}
+  .row.done a{text-decoration:line-through;color:var(--muted)}
+  .row .go{flex:0 0 auto;color:var(--muted);font-size:.8rem;border:1px solid var(--line);
+           padding:5px 9px;border-radius:8px}
+
+  .note{background:#2a220f;border:1px solid #5a4a1a;color:#f2dd9e;padding:11px 14px;border-radius:12px;font-size:.86rem}
+  .danger{background:#2a1414;border:1px solid #5a1f1f;color:#f2b0b0;padding:11px 14px;border-radius:12px;font-size:.86rem}
+  .err{color:#f2b0b0;font-size:.9rem;margin-top:8px}
+  .hidden{display:none}
+  a.tlink{color:var(--link)}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="ig">Instagram (ਇੰਸਟਾਗ੍ਰਾਮ)</div>
+    <div class="logo">Who Doesn't Follow Back</div>
+  </header>
+
+  <!-- UPLOAD -->
+  <section id="uploadCard" class="card">
+    <h2>1. Add your Instagram data</h2>
+    <div id="drop">
+      <div class="big">Tap to choose files</div>
+      <div class="small">or drag &amp; drop here</div>
+    </div>
+    <input id="fileInput" type="file" multiple accept=".zip,.json,application/json,application/zip">
+    <button class="btn secondary" id="pickBtn" type="button">Choose files</button>
+
+    <details style="margin-top:14px">
+      <summary class="small" style="cursor:pointer">How do I get this file?</summary>
+      <ol class="steps">
+        <li>Instagram app → <b>Settings and activity</b> → <b>Accounts Center</b></li>
+        <li><b>Your information and permissions</b> → <b>Download your information</b></li>
+        <li>Format: <b>JSON</b>, Date range: <b>All time</b>, include <b>Followers and following</b></li>
+        <li>When the email arrives, download the <b>.zip</b> and add it here.</li>
+      </ol>
+      <p class="small">You can add the whole <b>.zip</b>, or just <b>following.json</b> and <b>followers_1.json</b> (add all <b>followers_*.json</b> if there are several).</p>
+    </details>
+    <div id="uploadErr" class="err hidden"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="resultCard" class="card hidden">
+    <h2>2. People who don't follow you back</h2>
+    <div class="stats">
+      <div class="stat"><div class="n" id="sFollowing">0</div><div class="l">Following</div></div>
+      <div class="stat"><div class="n" id="sFollowers">0</div><div class="l">Followers</div></div>
+      <div class="stat hi"><div class="n" id="sDiff">0</div><div class="l">Not back</div></div>
+    </div>
+
+    <div class="progline"><span>Your progress</span><span id="progTxt">0 / 0 done</span></div>
+    <div class="bar"><i id="progBar"></i></div>
+    <div class="cap" id="capTxt"></div>
+
+    <div class="btns" style="margin-top:16px">
+      <button class="btn" id="dlHtml" type="button">Download list (HTML)</button>
+      <button class="btn secondary" id="dlCsv" type="button">CSV</button>
+      <button class="btn secondary" id="dlTxt" type="button">TXT</button>
+    </div>
+    <p class="small" style="margin-top:10px">The HTML download is a clickable page with direct profile links, split into ~<span id="batchLbl">120</span>/day batches. Open it in any browser and tap each name.</p>
+  </section>
+
+  <!-- SAFETY -->
+  <section id="safetyCard" class="card hidden">
+    <h2>3. Unfollow safely</h2>
+    <div class="note">Do about <b>100–120 per day</b>, no more. If Instagram ever says <b>"Try again later,"</b> stop for <b>24–48 hours</b>.</div>
+    <div class="danger" style="margin-top:10px"><b>Never</b> use an app or extension that asks for your Instagram password. This tool never needs it, and neither should anything else.</div>
+  </section>
+
+  <!-- LIVE LIST -->
+  <section id="listCard" class="card hidden">
+    <h2>Your list</h2>
+    <input class="search" id="search" type="search" placeholder="Search a username…">
+    <div class="btns" style="margin-bottom:6px">
+      <button class="btn secondary" id="resetProg" type="button">Reset progress</button>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <footer>
+    Your data is processed locally in your browser and never sent anywhere.<br>
+    Not affiliated with Instagram or Meta.
+  </footer>
+</div>
+
+<!-- JSZip loaded lazily only if a .zip is added -->
+<script>
+const JSZIP_URL = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+const BATCH = 120;
+const LS_KEY = "wdfb_progress_v1";
+
+const $ = id => document.getElementById(id);
+let names = [];          // final not-following-back usernames
+let done = new Set();    // usernames marked done (from localStorage)
+
+/* ---------- helpers ---------- */
+function loadProgress(){
+  try{ done = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]")); }
+  catch{ done = new Set(); }
+}
+function saveProgress(){
+  localStorage.setItem(LS_KEY, JSON.stringify([...done]));
+}
+function loadScript(src){
+  return new Promise((res, rej)=>{
+    const s = document.createElement("script");
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error("Could not load zip reader (no internet?). Add the JSON files instead."));
+    document.head.appendChild(s);
+  });
+}
+function showErr(msg){ const e=$("uploadErr"); e.textContent=msg; e.classList.remove("hidden"); }
+function clearErr(){ $("uploadErr").classList.add("hidden"); }
+
+/* ---------- parsing (matches the real export format) ---------- */
+function usernamesFromEntries(entries){
+  const out = new Set();
+  if(!Array.isArray(entries)) return out;
+  for(const entry of entries){
+    const sld = entry.string_list_data || [];
+    if(sld.length === 0 && entry.title){ out.add(entry.title.trim()); continue; }
+    for(const item of sld){
+      const v = (item.value || entry.title || "").trim();
+      if(v) out.add(v);
+    }
+  }
+  return out;
+}
+function parseFollowing(obj){
+  const entries = Array.isArray(obj) ? obj : (obj.relationships_following || []);
+  return usernamesFromEntries(entries);
+}
+function parseFollowers(obj){
+  const entries = Array.isArray(obj) ? obj : (obj.relationships_followers || []);
+  return usernamesFromEntries(entries);
+}
+function looksLikeFollowing(name){ return /following/i.test(name); }
+function looksLikeFollowers(name){ return /followers/i.test(name); }
+
+/* ---------- ingest files ---------- */
+async function handleFiles(fileList){
+  clearErr();
+  const files = [...fileList];
+  if(files.length === 0) return;
+
+  let followingObj = null;
+  const followerObjs = [];
+
+  try{
+    for(const f of files){
+      const lower = f.name.toLowerCase();
+      if(lower.endsWith(".zip")){
+        const fromZip = await readZip(f);
+        if(fromZip.following) followingObj = fromZip.following;
+        followerObjs.push(...fromZip.followers);
+      } else if(lower.endsWith(".json")){
+        const obj = JSON.parse(await f.text());
+        if(looksLikeFollowing(lower) || obj.relationships_following) followingObj = obj;
+        else if(looksLikeFollowers(lower) || obj.relationships_followers || Array.isArray(obj)) followerObjs.push(obj);
+        else followerObjs.push(obj); // best-effort
+      }
+    }
+  }catch(err){
+    showErr(err.message || "Could not read those files.");
+    return;
+  }
+
+  if(!followingObj){
+    showErr("Couldn't find your 'following.json'. Add the .zip, or add following.json (and followers_1.json).");
+    return;
+  }
+  if(followerObjs.length === 0){
+    showErr("Couldn't find your 'followers' file. Add the .zip, or include followers_1.json.");
+    return;
+  }
+
+  const following = parseFollowing(followingObj);
+  const followers = new Set();
+  for(const o of followerObjs) for(const n of parseFollowers(o)) followers.add(n);
+
+  names = [...following].filter(n => !followers.has(n)).sort((a,b)=>a.localeCompare(b));
+
+  $("sFollowing").textContent = following.size;
+  $("sFollowers").textContent = followers.size;
+  $("sDiff").textContent = names.length;
+
+  if(names.length === 0){
+    showErr("Good news — everyone you follow follows you back! Nothing to unfollow.");
+    return;
+  }
+  render();
+}
+
+async function readZip(file){
+  if(typeof JSZip === "undefined") await loadScript(JSZIP_URL);
+  const zip = await JSZip.loadAsync(file);
+  const res = { following:null, followers:[] };
+  const jobs = [];
+  zip.forEach((path, entry)=>{
+    if(entry.dir) return;
+    const p = path.toLowerCase();
+    if(!p.endsWith(".json")) return;
+    if(p.includes("followers_and_following/following") || /\/following\.json$/.test(p) || p.endsWith("following.json")){
+      jobs.push(entry.async("string").then(t=>{ res.following = JSON.parse(t); }));
+    } else if(/followers_?\d*\.json$/.test(p) || p.includes("followers_and_following/followers")){
+      jobs.push(entry.async("string").then(t=>{ res.followers.push(JSON.parse(t)); }));
+    }
+  });
+  await Promise.all(jobs);
+  return res;
+}
+
+/* ---------- render ---------- */
+function render(){
+  loadProgress();
+  ["resultCard","safetyCard","listCard"].forEach(id=>$(id).classList.remove("hidden"));
+  $("uploadCard").classList.add("hidden");
+  $("batchLbl").textContent = BATCH;
+  updateProgress();
+  buildList("");
+  $("search").value = "";
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function igUrl(name){ return "https://www.instagram.com/" + encodeURIComponent(name); }
+
+function buildList(filter){
+  const host = $("list");
+  host.innerHTML = "";
+  const f = filter.trim().toLowerCase();
+  for(let i=0;i<names.length;i+=BATCH){
+    const day = i/BATCH + 1;
+    const chunk = names.slice(i, i+BATCH).filter(n => !f || n.toLowerCase().includes(f));
+    if(chunk.length === 0) continue;
+    const sec = document.createElement("div");
+    sec.className = "day";
+    const doneInDay = chunk.filter(n=>done.has(n)).length;
+    sec.innerHTML = `<h3>Day ${day} <span class="c">${doneInDay}/${chunk.length} done</span></h3>`;
+    for(const n of chunk){
+      const row = document.createElement("div");
+      row.className = "row" + (done.has(n) ? " done" : "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = done.has(n);
+      cb.addEventListener("change", ()=>{
+        if(cb.checked) done.add(n); else done.delete(n);
+        row.classList.toggle("done", cb.checked);
+        saveProgress(); updateProgress();
+        const c = sec.querySelector(".c");
+        const dd = chunk.filter(x=>done.has(x)).length;
+        c.textContent = `${dd}/${chunk.length} done`;
+      });
+      const a = document.createElement("a");
+      a.href = igUrl(n); a.target = "_blank"; a.rel = "noopener"; a.textContent = n;
+      const go = document.createElement("span");
+      go.className = "go"; go.textContent = "Open ↗";
+      row.append(cb, a, go);
+      host.appendChild(sec).appendChild(row);
+    }
+  }
+  if(!host.children.length){
+    host.innerHTML = '<p class="small">No matches.</p>';
+  }
+}
+
+function updateProgress(){
+  const total = names.length;
+  const d = names.filter(n=>done.has(n)).length;
+  $("progTxt").textContent = `${d} / ${total} done`;
+  $("progBar").style.width = total ? (100*d/total).toFixed(1)+"%" : "0%";
+  const remaining = total - d;
+  const days = Math.ceil(remaining / BATCH);
+  const cap = $("capTxt");
+  if(remaining > 0){
+    cap.textContent = `About ${days} day${days===1?"":"s"} left at ${BATCH}/day. Keep it under ~120 a day.`;
+    cap.classList.remove("warn");
+  } else {
+    cap.textContent = "All done. Nice work.";
+  }
+}
+
+/* ---------- downloads ---------- */
+function download(filename, text, type){
+  const blob = new Blob([text], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function esc(s){ return s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function buildHtml(){
+  const total = names.length;
+  let out = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unfollow list (${total})</title>
+<style>
+ body{font-family:-apple-system,system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;line-height:1.6;color:#222}
+ h1{font-size:1.3rem} h2{margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:4px}
+ .row{display:flex;align-items:center;gap:10px;padding:5px 0}
+ .row a{text-decoration:none;color:#0064c8} .row a:visited{color:#999}
+ input[type=checkbox]{width:18px;height:18px}
+ .note{background:#fff7e6;border:1px solid #ffe0a3;padding:10px 14px;border-radius:8px;font-size:.9rem}
+</style></head><body>
+<h1>Accounts that don't follow you back (${total})</h1>
+<p class="note">Click a name, then tap <b>Following &rarr; Unfollow</b>. About ${BATCH}/day to stay under Instagram's limits.</p>`;
+  for(let i=0;i<total;i+=BATCH){
+    const day = i/BATCH + 1;
+    const chunk = names.slice(i, i+BATCH);
+    out += `<h2>Day ${day} (${chunk.length} accounts)</h2>`;
+    for(const n of chunk){
+      const s = esc(n);
+      out += `<div class="row"><input type="checkbox"><a href="${igUrl(n)}" target="_blank" rel="noopener">${s}</a></div>`;
+    }
+  }
+  out += "</body></html>";
+  return out;
+}
+function buildCsv(){
+  let out = "username,profile_url\n";
+  for(const n of names) out += `"${n.replace(/"/g,'""')}","${igUrl(n)}"\n`;
+  return out;
+}
+
+/* ---------- wiring ---------- */
+$("pickBtn").addEventListener("click", ()=>$("fileInput").click());
+$("drop").addEventListener("click", ()=>$("fileInput").click());
+$("fileInput").addEventListener("change", e=>handleFiles(e.target.files));
+
+const drop = $("drop");
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault();drop.classList.add("hover");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault();drop.classList.remove("hover");}));
+drop.addEventListener("drop", e=>handleFiles(e.dataTransfer.files));
+
+$("dlHtml").addEventListener("click", ()=>download("unfollow_list.html", buildHtml(), "text/html"));
+$("dlCsv").addEventListener("click", ()=>download("not_following_back.csv", buildCsv(), "text/csv"));
+$("dlTxt").addEventListener("click", ()=>download("not_following_back.txt", names.join("\n"), "text/plain"));
+
+$("search").addEventListener("input", e=>buildList(e.target.value));
+$("resetProg").addEventListener("click", ()=>{
+  if(confirm("Clear all your checkmarks?")){ done = new Set(); saveProgress(); buildList($("search").value); updateProgress(); }
+});
+</script>
+</body>
+</html>
