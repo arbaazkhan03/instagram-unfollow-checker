@@ -865,7 +865,7 @@ function statsCardBlob(){
   ctx.textAlign = "center"; ctx.fillStyle = "#fff";
   ctx.font = "800 62px -apple-system, Segoe UI, Arial, sans-serif";
   ctx.fillText("My Instagram", W/2, 220);
-  ctx.fillText("Reality Check 👀", W/2, 300);
+  ctx.fillText("Family", W/2, 300);
 
   const following = parseInt($("sFollowing").textContent) || 0;
   const followers = parseInt($("sFollowers").textContent) || 0;
@@ -914,7 +914,18 @@ function statsCardBlob(){
 
   return new Promise(res => c.toBlob(res, "image/png"));
 }
+let cardBusy = false;
 async function shareStatsCard(){
+  if(cardBusy) return;            // ignore rapid double taps
+  cardBusy = true;
+  const btn = $("statsCardBtn"); btn.disabled = true;
+  try{
+    await doShareStatsCard();
+  } finally {
+    cardBusy = false; btn.disabled = false;
+  }
+}
+async function doShareStatsCard(){
   const blob = await statsCardBlob();
   if(!blob){ toast("Couldn't create the image."); return; }
   const file = new File([blob], "my-instagram-stats.png", { type: "image/png" });
