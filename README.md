@@ -18,6 +18,11 @@ Open the link above, add your Instagram data file (the `.zip`, or just
 everyone who doesn't follow you back, split into safe daily batches. Nothing to
 install.
 
+**Tip:** Log into Instagram in the same browser first. Each name is a direct link
+to that person's profile, so once you're logged in, tapping a name takes you
+straight there — just tap **Following → Unfollow**. If you're not logged in,
+Instagram will send you to the login page first.
+
 ### 2. Python scripts (for the terminal-inclined)
 The same logic as command-line scripts, in the [`scripts/`](scripts/) folder.
 Requires Python 3.
