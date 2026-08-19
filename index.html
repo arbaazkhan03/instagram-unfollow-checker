@@ -262,7 +262,8 @@
       </div>
     </div>
     <div style="margin-top:12px">
-      Your data is processed locally in your browser and never sent anywhere.<br>
+      Your Instagram data is processed locally in your browser and never sent anywhere.<br>
+      <span style="opacity:.8">Anonymous visit counts only (no cookies, no personal data).</span><br>
       Not affiliated with Instagram or Meta.<br>
       <span style="opacity:.85">Created by <a class="tlink" href="https://www.instagram.com/just_an_engineer.mlk" target="_blank" rel="noopener">Arbaaz</a></span>
     </div>
@@ -677,5 +678,9 @@ if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
 }
 </script>
+
+<!-- Cloudflare Web Analytics (cookieless, anonymous page counts only) -->
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "35ed0ad851dc440ca426fa696b001588"}'></script>
+<!-- End Cloudflare Web Analytics -->
 </body>
 </html>
