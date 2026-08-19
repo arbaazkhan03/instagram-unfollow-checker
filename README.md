@@ -60,6 +60,6 @@ analytics, no server, no data collection. Not affiliated with Instagram or Meta.
 
 Made by **Arbaaz**. Questions, feedback, or ideas? Reach out:
 
-- Email: iam.arbaazkhan03@gmail.com
+- Email: `iam.arbaazkhan03 [at] gmail [dot] com`
 - Instagram: [@just_an_engineer.mlk](https://www.instagram.com/just_an_engineer.mlk)
 - LinkedIn: [arbaaz-khan03](https://www.linkedin.com/in/arbaaz-khan03/)
