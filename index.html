@@ -254,6 +254,8 @@
       <button class="btn secondary" id="dlCsv" type="button">CSV</button>
       <button class="btn secondary" id="dlTxt" type="button">TXT</button>
     </div>
+    <button class="btn" id="statsCardBtn" type="button" style="margin-top:10px">📸 Share my stats (for your story)</button>
+    <p class="small" style="margin-top:6px">Makes a shareable image of your numbers — no usernames, totally private.</p>
     <button class="btn secondary" id="shareBtn" type="button" style="margin-top:10px">🔗 Share this tool with friends</button>
     <p class="small" style="margin-top:10px">The HTML download is a clickable page with direct profile links, split into ~<span id="batchLbl">120</span>/day batches.</p>
     <div class="note" style="margin-top:12px"><b>Tip:</b> Log into Instagram in this same browser first. Then tapping a name takes you straight to that profile, ready to tap <b>Following &rarr; Unfollow</b>.</div>
@@ -831,6 +833,100 @@ async function shareTool(){
 }
 $("shareBtn").addEventListener("click", shareTool);
 $("shareBtn2").addEventListener("click", shareTool);
+
+/* ---------- shareable stats card (client-side canvas, no usernames) ---------- */
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function statsCardBlob(){
+  const W = 1080, H = 1920;
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+
+  // background gradient
+  const g = ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,"#c724b1"); g.addColorStop(.5,"#f05f43"); g.addColorStop(1,"#f9ce34");
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  // dark overlay for contrast
+  ctx.fillStyle = "rgba(10,10,16,.62)"; ctx.fillRect(0,0,W,H);
+
+  ctx.textAlign = "center"; ctx.fillStyle = "#fff";
+  ctx.font = "800 62px -apple-system, Segoe UI, Arial, sans-serif";
+  ctx.fillText("My Instagram", W/2, 220);
+  ctx.fillText("Reality Check 👀", W/2, 300);
+
+  const following = parseInt($("sFollowing").textContent) || 0;
+  const followers = parseInt($("sFollowers").textContent) || 0;
+  const notBack = allNotBack.length;
+  const mutual = mutualsCount;
+  const fans = fansList.length;
+
+  // hero number
+  ctx.fillStyle = "#ffd23f";
+  ctx.font = "800 280px -apple-system, Segoe UI, Arial, sans-serif";
+  ctx.fillText(String(notBack), W/2, 640);
+  ctx.fillStyle = "#fff";
+  ctx.font = "600 52px -apple-system, Segoe UI, Arial, sans-serif";
+  ctx.fillText("don't follow me back", W/2, 800);
+
+  // 2x2 stat grid
+  const cells = [
+    ["Following", following],
+    ["Followers", followers],
+    ["Mutuals", mutual],
+    ["Fans (you don't\nfollow back)", fans],
+  ];
+  const gw = 460, gh = 300, gap = 40;
+  const startX = (W - (gw*2+gap))/2, startY = 900;
+  cells.forEach((cell,i)=>{
+    const col = i%2, row = Math.floor(i/2);
+    const x = startX + col*(gw+gap), y = startY + row*(gh+gap);
+    ctx.fillStyle = "rgba(255,255,255,.12)";
+    roundRect(ctx,x,y,gw,gh,32); ctx.fill();
+    ctx.fillStyle = "#ffd23f";
+    ctx.font = "800 110px -apple-system, Segoe UI, Arial, sans-serif";
+    ctx.fillText(String(cell[1]), x+gw/2, y+150);
+    ctx.fillStyle = "#f0eafc";
+    ctx.font = "600 40px -apple-system, Segoe UI, Arial, sans-serif";
+    const lines = String(cell[0]).split("\n");
+    lines.forEach((ln,li)=> ctx.fillText(ln, x+gw/2, y+215+li*48));
+  });
+
+  // footer CTA
+  ctx.fillStyle = "#fff";
+  ctx.font = "700 46px -apple-system, Segoe UI, Arial, sans-serif";
+  ctx.fillText("Check yours — free & private", W/2, 1760);
+  ctx.fillStyle = "#ffd23f";
+  ctx.font = "600 40px -apple-system, Segoe UI, Arial, sans-serif";
+  ctx.fillText("instagram-unfollow-checker", W/2, 1820);
+  ctx.fillStyle = "rgba(255,255,255,.8)";
+  ctx.font = "500 34px -apple-system, Segoe UI, Arial, sans-serif";
+  ctx.fillText("via @just_an_engineer.mlk", W/2, 1868);
+
+  return new Promise(res => c.toBlob(res, "image/png"));
+}
+async function shareStatsCard(){
+  const blob = await statsCardBlob();
+  if(!blob){ toast("Couldn't create the image."); return; }
+  const file = new File([blob], "my-instagram-stats.png", { type: "image/png" });
+  if(navigator.canShare && navigator.canShare({ files:[file] })){
+    try{ await navigator.share({ files:[file], title:"My Instagram Reality Check" }); return; }
+    catch(e){ if(e && e.name === "AbortError") return; }
+  }
+  // fallback: download the image
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "my-instagram-stats.png";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+  toast("Image saved — post it to your story!");
+}
+$("statsCardBtn").addEventListener("click", shareStatsCard);
 
 /* ---------- demo mode ---------- */
 function loadDemo(){
