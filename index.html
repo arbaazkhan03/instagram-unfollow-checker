@@ -6,13 +6,37 @@
 <meta name="theme-color" content="#0a0a0f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Who Doesn't Follow Back</title>
+<title>Instagram Unfollow Checker — Who Doesn't Follow You Back</title>
+<meta name="description" content="Find the Instagram accounts you follow that don't follow you back. No login, no password — runs entirely in your browser.">
+
+<!-- Social preview (Open Graph + Twitter) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Instagram Unfollow Checker">
+<meta property="og:description" content="Find who doesn't follow you back. No login, no password — runs entirely in your browser.">
+<meta property="og:url" content="https://arbaazkhan03.github.io/instagram-unfollow-checker/">
+<meta property="og:image" content="https://arbaazkhan03.github.io/instagram-unfollow-checker/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Instagram Unfollow Checker">
+<meta name="twitter:description" content="Find who doesn't follow you back. No login, no password — runs entirely in your browser.">
+<meta name="twitter:image" content="https://arbaazkhan03.github.io/instagram-unfollow-checker/og-image.png">
+
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <style>
   :root{
     --bg:#0a0a0f; --card:#15151f; --card2:#1d1d2a; --line:#2a2a3a;
     --txt:#ececf2; --muted:#9a9ab0; --brand:#c724b1; --brand2:#f05f43;
     --ok:#2fd07a; --warn:#ffcf5c; --link:#66b2ff;
+    --cardbg:rgba(21,21,31,.72); --field:#1d1d2a; --rowbg:#1d1d2a;
+  }
+  html[data-theme="light"]{
+    --bg:#f4f4f8; --card:#ffffff; --card2:#eef0f5; --line:#d9dbe6;
+    --txt:#1a1a24; --muted:#5c5c72; --brand:#c724b1; --brand2:#e0552f;
+    --ok:#1e9c5b; --warn:#a5730a; --link:#0064c8;
+    --cardbg:rgba(255,255,255,.82); --field:#eef0f5; --rowbg:#f6f7fb;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
@@ -31,8 +55,16 @@
     background-attachment: fixed;
     min-height:100vh;
   }
+  html[data-theme="light"] body{
+    background:
+      radial-gradient(closest-side, rgba(199,36,177,.16), transparent 70%) -10% -5% / 70vw 70vw no-repeat,
+      radial-gradient(closest-side, rgba(240,95,67,.14), transparent 70%) 115% 8% / 65vw 65vw no-repeat,
+      radial-gradient(closest-side, rgba(47,208,122,.12), transparent 70%) 50% 55% / 55vw 55vw no-repeat,
+      var(--bg);
+    background-attachment: fixed;
+  }
   .wrap{max-width:640px;margin:0 auto;padding:20px 16px 96px}
-  header{text-align:center;margin:12px 0 20px}
+  header{text-align:center;margin:12px 0 20px;position:relative}
   .ig{
     font-size:2rem;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;
     background:linear-gradient(90deg,#f9ce34,var(--brand2),var(--brand));
@@ -43,21 +75,23 @@
     background:linear-gradient(90deg,var(--brand),var(--brand2));
     -webkit-background-clip:text;background-clip:text;color:transparent;
   }
-  .sub{color:var(--muted);font-size:.92rem;margin-top:2px}
+  .themeBtn{
+    position:absolute;top:-2px;right:0;border:1px solid var(--line);background:var(--card2);
+    color:var(--txt);border-radius:10px;padding:7px 10px;font-size:1rem;cursor:pointer;line-height:1;
+  }
 
   .card{
-    background:rgba(21,21,31,.72);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0;
+    background:var(--cardbg);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0;
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   }
   h2{font-size:1.05rem;margin:0 0 10px}
   p.small,.small{font-size:.86rem;color:var(--muted)}
 
-  /* Dropzone */
   #drop{
     border:2px dashed var(--line);border-radius:16px;padding:30px 18px;text-align:center;
     background:var(--card2);transition:border-color .15s,background .15s;cursor:pointer;
   }
-  #drop.hover{border-color:var(--brand);background:#22222f}
+  #drop.hover{border-color:var(--brand)}
   #drop .big{font-size:1.05rem;font-weight:700;margin-bottom:6px}
   .btn{
     display:inline-block;border:0;border-radius:12px;padding:13px 18px;font-size:1rem;font-weight:700;
@@ -67,57 +101,64 @@
   .btn.secondary{background:var(--card2);border:1px solid var(--line);color:var(--txt)}
   .btn:active{transform:translateY(1px)}
   .btns{display:flex;gap:10px;flex-wrap:wrap}
-  .btns .btn{flex:1;min-width:140px}
+  .btns .btn{flex:1;min-width:130px}
   input[type=file]{display:none}
 
-  /* Steps list */
   ol.steps{margin:8px 0 0;padding-left:20px}
   ol.steps li{margin:6px 0;font-size:.9rem;color:var(--muted)}
   ol.steps b{color:var(--txt)}
 
-  /* Stats */
-  .stats{display:flex;gap:10px;margin:0 0 6px}
-  .stat{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+  .stats{display:flex;gap:10px;margin:0 0 6px;flex-wrap:wrap}
+  .stat{flex:1;min-width:70px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
   .stat .n{font-size:1.5rem;font-weight:800}
   .stat .l{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
   .stat.hi .n{color:var(--brand2)}
 
-  /* Progress */
   .progline{display:flex;justify-content:space-between;font-size:.85rem;margin:14px 0 6px}
   .bar{height:10px;background:var(--card2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
   .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .25s}
   .cap{margin-top:8px;font-size:.82rem}
   .cap.warn{color:var(--warn)}
 
-  /* Search */
-  .search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
-          background:var(--card2);color:var(--txt);font-size:1rem;margin:4px 0 6px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:4px 0 6px}
+  .search{flex:1;min-width:180px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+          background:var(--field);color:var(--txt);font-size:1rem}
   .search::placeholder{color:var(--muted)}
+  select.sort{padding:12px 12px;border-radius:12px;border:1px solid var(--line);background:var(--field);color:var(--txt);font-size:.95rem}
 
-  /* Day sections */
   .day{margin-top:16px}
   .day h3{font-size:.95rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:center}
   .day h3 .c{font-size:.78rem;color:var(--muted);font-weight:500}
-  .row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);
-       border-radius:12px;margin:6px 0;background:var(--card2)}
+  .row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);
+       border-radius:12px;margin:6px 0;background:var(--rowbg)}
   .row.done{opacity:.5}
   .row input[type=checkbox]{width:22px;height:22px;flex:0 0 auto;accent-color:var(--brand)}
-  .row a{color:var(--link);text-decoration:none;font-size:.98rem;word-break:break-all;flex:1}
-  .row.done a{text-decoration:line-through;color:var(--muted)}
-  .row .go{flex:0 0 auto;color:var(--muted);font-size:.8rem;border:1px solid var(--line);
-           padding:5px 9px;border-radius:8px}
+  .row a.name{color:var(--link);text-decoration:none;font-size:.98rem;word-break:break-all;flex:1}
+  .row.done a.name{text-decoration:line-through;color:var(--muted)}
+  .iconbtn{flex:0 0 auto;color:var(--muted);font-size:.9rem;border:1px solid var(--line);
+           padding:6px 9px;border-radius:8px;background:transparent;cursor:pointer;text-decoration:none;line-height:1}
+  .iconbtn:active{transform:translateY(1px)}
+  .iconbtn.keep.on{color:var(--warn);border-color:var(--warn)}
 
   .note{background:#2a220f;border:1px solid #5a4a1a;color:#f2dd9e;padding:11px 14px;border-radius:12px;font-size:.86rem}
+  html[data-theme="light"] .note{background:#fff7e6;border-color:#ffe0a3;color:#7a5b00}
   .danger{background:#2a1414;border:1px solid #5a1f1f;color:#f2b0b0;padding:11px 14px;border-radius:12px;font-size:.86rem}
+  html[data-theme="light"] .danger{background:#fdeaea;border-color:#f3c2c2;color:#a12626}
+  .info{background:#0f2030;border:1px solid #1f4a5a;color:#a9dbf2;padding:11px 14px;border-radius:12px;font-size:.86rem}
+  html[data-theme="light"] .info{background:#e8f4fb;border-color:#b8ddef;color:#215a75}
   .err{color:#f2b0b0;font-size:.9rem;margin-top:8px}
+  html[data-theme="light"] .err{color:#a12626}
   .hidden{display:none}
   a.tlink{color:var(--link)}
   footer{text-align:center;color:var(--muted);font-size:.78rem;margin-top:26px}
+  .burst{font-size:.85rem;margin:4px 0;color:var(--muted)}
+  .burst b{color:var(--txt)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
+    <button class="themeBtn" id="themeBtn" type="button" title="Toggle light/dark" aria-label="Toggle theme">🌙</button>
     <div class="ig">Instagram (ਇੰਸਟਾਗ੍ਰਾਮ)</div>
     <div class="logo">Who Doesn't Follow Back</div>
   </header>
@@ -137,7 +178,7 @@
       <ol class="steps">
         <li>Instagram app → <b>Settings and activity</b> → <b>Accounts Center</b></li>
         <li><b>Your information and permissions</b> → <b>Download your information</b></li>
-        <li>Format: <b>JSON</b>, Date range: <b>All time</b>, include <b>Followers and following</b></li>
+        <li>Format: <b>JSON</b> (not HTML), Date range: <b>All time</b>, include <b>Followers and following</b></li>
         <li>When the email arrives, download the <b>.zip</b> and add it here.</li>
       </ol>
       <p class="small">You can add the whole <b>.zip</b>, or just <b>following.json</b> and <b>followers_1.json</b> (add all <b>followers_*.json</b> if there are several).</p>
@@ -152,6 +193,7 @@
       <div class="stat"><div class="n" id="sFollowing">0</div><div class="l">Following</div></div>
       <div class="stat"><div class="n" id="sFollowers">0</div><div class="l">Followers</div></div>
       <div class="stat hi"><div class="n" id="sDiff">0</div><div class="l">Not back</div></div>
+      <div class="stat"><div class="n" id="sKept">0</div><div class="l">Kept</div></div>
     </div>
 
     <div class="progline"><span>Your progress</span><span id="progTxt">0 / 0 done</span></div>
@@ -163,8 +205,14 @@
       <button class="btn secondary" id="dlCsv" type="button">CSV</button>
       <button class="btn secondary" id="dlTxt" type="button">TXT</button>
     </div>
-    <p class="small" style="margin-top:10px">The HTML download is a clickable page with direct profile links, split into ~<span id="batchLbl">120</span>/day batches. Open it in any browser and tap each name.</p>
-    <div class="note" style="margin-top:12px"><b>Tip:</b> Log into Instagram in this same browser first. Then tapping a name takes you straight to that profile, ready to tap <b>Following &rarr; Unfollow</b>. If you're not logged in, Instagram will ask you to log in first.</div>
+    <p class="small" style="margin-top:10px">The HTML download is a clickable page with direct profile links, split into ~<span id="batchLbl">120</span>/day batches.</p>
+    <div class="note" style="margin-top:12px"><b>Tip:</b> Log into Instagram in this same browser first. Then tapping a name takes you straight to that profile, ready to tap <b>Following &rarr; Unfollow</b>.</div>
+  </section>
+
+  <!-- BOT ANALYSIS -->
+  <section id="botCard" class="card hidden">
+    <h2>Follow activity check</h2>
+    <div id="botBody"></div>
   </section>
 
   <!-- SAFETY -->
@@ -177,10 +225,21 @@
   <!-- LIVE LIST -->
   <section id="listCard" class="card hidden">
     <h2>Your list</h2>
-    <input class="search" id="search" type="search" placeholder="Search a username…">
+    <div class="controls">
+      <input class="search" id="search" type="search" placeholder="Search a username…">
+      <select class="sort" id="sort" aria-label="Sort order">
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+        <option value="recent">Recently followed first</option>
+        <option value="oldest">Oldest followed first</option>
+      </select>
+    </div>
+    <p class="small" id="keepHint">Tap 📌 to keep an account (e.g. a celeb you follow on purpose) — it's removed from the list and won't count.</p>
     <div class="btns" style="margin-bottom:6px">
       <button class="btn secondary" id="resetProg" type="button">Reset progress</button>
+      <button class="btn secondary hidden" id="showKept" type="button">Show kept (0)</button>
     </div>
+    <div id="keptBox" class="info hidden" style="margin-bottom:8px"></div>
     <div id="list"></div>
   </section>
 
@@ -191,35 +250,51 @@
   </footer>
 </div>
 
-<!-- JSZip loaded lazily only if a .zip is added -->
 <script>
-const JSZIP_URL = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
 const BATCH = 120;
 const LS_KEY = "wdfb_progress_v1";
+const LS_KEEP = "wdfb_keep_v1";
+const LS_THEME = "wdfb_theme_v1";
 
 const $ = id => document.getElementById(id);
-let names = [];          // final not-following-back usernames
-let done = new Set();    // usernames marked done (from localStorage)
 
-/* ---------- helpers ---------- */
-function loadProgress(){
-  try{ done = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]")); }
-  catch{ done = new Set(); }
+let allNotBack = [];              // full computed non-follower list (before keep filter)
+let followTs = {};                // username -> follow timestamp (seconds), if available
+let names = [];                   // working list (allNotBack minus kept), after sort
+let done = new Set();
+let kept = new Set();
+let curSort = "az";
+
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+/* ---------- storage ---------- */
+function loadSets(){
+  try{ done = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]")); }catch{ done = new Set(); }
+  try{ kept = new Set(JSON.parse(localStorage.getItem(LS_KEEP) || "[]")); }catch{ kept = new Set(); }
 }
-function saveProgress(){
-  localStorage.setItem(LS_KEY, JSON.stringify([...done]));
+function saveDone(){ localStorage.setItem(LS_KEY, JSON.stringify([...done])); }
+function saveKept(){ localStorage.setItem(LS_KEEP, JSON.stringify([...kept])); }
+
+/* ---------- theme ---------- */
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  $("themeBtn").textContent = t === "light" ? "☀️" : "🌙";
+  document.querySelector('meta[name=theme-color]').setAttribute("content", t === "light" ? "#f4f4f8" : "#0a0a0f");
 }
-function loadScript(src){
-  return new Promise((res, rej)=>{
-    const s = document.createElement("script");
-    s.src = src; s.onload = res; s.onerror = () => rej(new Error("Could not load zip reader (no internet?). Add the JSON files instead."));
-    document.head.appendChild(s);
-  });
-}
-function showErr(msg){ const e=$("uploadErr"); e.textContent=msg; e.classList.remove("hidden"); }
+(function initTheme(){
+  const saved = localStorage.getItem(LS_THEME) || "dark";
+  applyTheme(saved);
+})();
+$("themeBtn").addEventListener("click", ()=>{
+  const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+  localStorage.setItem(LS_THEME, next); applyTheme(next);
+});
+
+/* ---------- errors ---------- */
+function showErr(msg){ const e=$("uploadErr"); e.innerHTML=msg; e.classList.remove("hidden"); }
 function clearErr(){ $("uploadErr").classList.add("hidden"); }
 
-/* ---------- parsing (matches the real export format) ---------- */
+/* ---------- parsing ---------- */
 function usernamesFromEntries(entries){
   const out = new Set();
   if(!Array.isArray(entries)) return out;
@@ -233,22 +308,37 @@ function usernamesFromEntries(entries){
   }
   return out;
 }
-function parseFollowing(obj){
-  const entries = Array.isArray(obj) ? obj : (obj.relationships_following || []);
-  return usernamesFromEntries(entries);
-}
-function parseFollowers(obj){
-  const entries = Array.isArray(obj) ? obj : (obj.relationships_followers || []);
-  return usernamesFromEntries(entries);
-}
-function looksLikeFollowing(name){ return /following/i.test(name); }
-function looksLikeFollowers(name){ return /followers/i.test(name); }
+function followingEntries(obj){ return Array.isArray(obj) ? obj : (obj.relationships_following || []); }
+function followerEntries(obj){ return Array.isArray(obj) ? obj : (obj.relationships_followers || []); }
 
-/* ---------- ingest files ---------- */
+function parseFollowingWithTs(obj){
+  const entries = followingEntries(obj);
+  const set = new Set();
+  const ts = {};
+  for(const entry of entries){
+    const sld = entry.string_list_data || [];
+    if(sld.length === 0 && entry.title){ set.add(entry.title.trim()); continue; }
+    for(const item of sld){
+      const v = (item.value || entry.title || "").trim();
+      if(!v) continue;
+      set.add(v);
+      if(item.timestamp) ts[v] = item.timestamp;
+    }
+  }
+  return { set, ts };
+}
+
+/* ---------- ingest ---------- */
 async function handleFiles(fileList){
   clearErr();
   const files = [...fileList];
   if(files.length === 0) return;
+
+  // Friendly guard: HTML-format export instead of JSON
+  if(files.some(f => /\.html?$/i.test(f.name)) && !files.some(f => /\.(json|zip)$/i.test(f.name))){
+    showErr("Those look like <b>HTML</b> files. Please re-download your data in <b>JSON</b> format (Download your information → Format: JSON), then add the .zip or the .json files.");
+    return;
+  }
 
   let followingObj = null;
   const followerObjs = [];
@@ -261,10 +351,12 @@ async function handleFiles(fileList){
         if(fromZip.following) followingObj = fromZip.following;
         followerObjs.push(...fromZip.followers);
       } else if(lower.endsWith(".json")){
-        const obj = JSON.parse(await f.text());
-        if(looksLikeFollowing(lower) || obj.relationships_following) followingObj = obj;
-        else if(looksLikeFollowers(lower) || obj.relationships_followers || Array.isArray(obj)) followerObjs.push(obj);
-        else followerObjs.push(obj); // best-effort
+        let obj;
+        try{ obj = JSON.parse(await f.text()); }
+        catch{ showErr("Couldn't read <b>"+esc(f.name)+"</b> — it doesn't look like valid JSON. Make sure you chose JSON format when downloading."); return; }
+        if(/following/i.test(lower) || obj.relationships_following) followingObj = obj;
+        else if(/followers/i.test(lower) || obj.relationships_followers || Array.isArray(obj)) followerObjs.push(obj);
+        else followerObjs.push(obj);
       }
     }
   }catch(err){
@@ -272,34 +364,43 @@ async function handleFiles(fileList){
     return;
   }
 
+  if(!followingObj && followerObjs.length === 0){
+    showErr("I couldn't find <b>following.json</b> or <b>followers_1.json</b> in what you added. Add the whole <b>.zip</b>, or both of those JSON files together.");
+    return;
+  }
   if(!followingObj){
-    showErr("Couldn't find your 'following.json'. Add the .zip, or add following.json (and followers_1.json).");
+    showErr("Found your followers file but not <b>following.json</b>. Add <b>following.json</b> too (it's in <i>connections/followers_and_following/</i>), or just add the whole .zip.");
     return;
   }
   if(followerObjs.length === 0){
-    showErr("Couldn't find your 'followers' file. Add the .zip, or include followers_1.json.");
+    showErr("Found <b>following.json</b> but not your <b>followers</b> file. Add <b>followers_1.json</b> too (all followers_*.json if there are several), or add the whole .zip.");
     return;
   }
 
-  const following = parseFollowing(followingObj);
+  const { set: following, ts } = parseFollowingWithTs(followingObj);
+  followTs = ts;
   const followers = new Set();
-  for(const o of followerObjs) for(const n of parseFollowers(o)) followers.add(n);
+  for(const o of followerObjs) for(const n of usernamesFromEntries(followerEntries(o))) followers.add(n);
 
-  names = [...following].filter(n => !followers.has(n)).sort((a,b)=>a.localeCompare(b));
+  allNotBack = [...following].filter(n => !followers.has(n));
 
   $("sFollowing").textContent = following.size;
   $("sFollowers").textContent = followers.size;
-  $("sDiff").textContent = names.length;
 
-  if(names.length === 0){
-    showErr("Good news — everyone you follow follows you back! Nothing to unfollow.");
+  if(allNotBack.length === 0){
+    showErr("Good news — everyone you follow follows you back. Nothing to unfollow. 🎉");
     return;
   }
+  loadSets();
+  buildBotAnalysis(followingObj);
   render();
 }
 
 async function readZip(file){
-  if(typeof JSZip === "undefined") await loadScript(JSZIP_URL);
+  if(typeof JSZip === "undefined"){
+    try{ await loadJszip(); }
+    catch{ throw new Error("Couldn't load the zip reader. Try adding the JSON files (following.json + followers_1.json) directly instead of the .zip."); }
+  }
   const zip = await JSZip.loadAsync(file);
   const res = { following:null, followers:[] };
   const jobs = [];
@@ -316,13 +417,74 @@ async function readZip(file){
   await Promise.all(jobs);
   return res;
 }
+function loadJszip(){
+  return new Promise((res, rej)=>{
+    const s = document.createElement("script");
+    s.src = "jszip.min.js";  // vendored locally (works offline)
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
 
-/* ---------- render ---------- */
+/* ---------- bot / automation analysis ---------- */
+function buildBotAnalysis(followingObj){
+  const entries = followingEntries(followingObj);
+  const rows = [];
+  for(const e of entries){
+    for(const item of (e.string_list_data || [])){
+      const t = item.timestamp;
+      if(t) rows.push(t);
+    }
+  }
+  if(rows.length < 5){ $("botCard").classList.add("hidden"); return; }
+  rows.sort((a,b)=>a-b);
+
+  const bursts = []; let cur = [rows[0]];
+  for(let i=1;i<rows.length;i++){
+    if(rows[i]-rows[i-1] <= 60) cur.push(rows[i]);
+    else { bursts.push(cur); cur = [rows[i]]; }
+  }
+  bursts.push(cur);
+  const big = bursts.filter(b=>b.length>=5);
+  const inBursts = big.reduce((s,b)=>s+b.length,0);
+  const pct = Math.round(100*inBursts/rows.length);
+
+  const fmt = t => new Date(t*1000).toISOString().slice(0,10);
+  let html = `<div class="burst">Total follows with a date: <b>${rows.length}</b> (from <b>${fmt(rows[0])}</b> to <b>${fmt(rows[rows.length-1])}</b>)</div>`;
+  html += `<div class="burst">Rapid bursts (5+ follows within 60s): <b>${big.length}</b></div>`;
+  html += `<div class="burst"><b>${pct}%</b> of your follows happened in rapid bursts.</div>`;
+  if(pct >= 20){
+    html += `<div class="danger" style="margin-top:10px">A high share of your follows happened in fast bursts, which often means an app or automation was used. If you didn't do that yourself: change your password, turn on two-factor auth, and log out of unknown sessions.</div>`;
+  } else {
+    html += `<div class="info" style="margin-top:10px">This looks like normal, human follow activity — no big automation bursts detected.</div>`;
+  }
+  $("botBody").innerHTML = html;
+  $("botCard").classList.remove("hidden");
+}
+
+/* ---------- working list ---------- */
+function recompute(){
+  names = allNotBack.filter(n => !kept.has(n));
+  const s = curSort;
+  if(s === "az") names.sort((a,b)=>a.localeCompare(b));
+  else if(s === "za") names.sort((a,b)=>b.localeCompare(a));
+  else if(s === "recent") names.sort((a,b)=>(followTs[b]||0)-(followTs[a]||0));
+  else if(s === "oldest") names.sort((a,b)=>(followTs[a]||1e11)-(followTs[b]||1e11));
+  $("sDiff").textContent = names.length;
+  $("sKept").textContent = kept.size;
+  const sk = $("showKept");
+  sk.textContent = `Show kept (${kept.size})`;
+  sk.classList.toggle("hidden", kept.size === 0);
+}
+
 function render(){
-  loadProgress();
   ["resultCard","safetyCard","listCard"].forEach(id=>$(id).classList.remove("hidden"));
   $("uploadCard").classList.add("hidden");
   $("batchLbl").textContent = BATCH;
+  // recent/oldest only make sense if we have timestamps
+  const hasTs = Object.keys(followTs).length > 0;
+  [...$("sort").options].forEach(o=>{ if((o.value==="recent"||o.value==="oldest")) o.disabled = !hasTs; });
+  recompute();
   updateProgress();
   buildList("");
   $("search").value = "";
@@ -330,11 +492,12 @@ function render(){
 }
 
 function igUrl(name){ return "https://www.instagram.com/" + encodeURIComponent(name); }
+function igAppUrl(name){ return "instagram://user?username=" + encodeURIComponent(name); }
 
 function buildList(filter){
   const host = $("list");
   host.innerHTML = "";
-  const f = filter.trim().toLowerCase();
+  const f = (filter||"").trim().toLowerCase();
   for(let i=0;i<names.length;i+=BATCH){
     const day = i/BATCH + 1;
     const chunk = names.slice(i, i+BATCH).filter(n => !f || n.toLowerCase().includes(f));
@@ -343,30 +506,47 @@ function buildList(filter){
     sec.className = "day";
     const doneInDay = chunk.filter(n=>done.has(n)).length;
     sec.innerHTML = `<h3>Day ${day} <span class="c">${doneInDay}/${chunk.length} done</span></h3>`;
-    for(const n of chunk){
-      const row = document.createElement("div");
-      row.className = "row" + (done.has(n) ? " done" : "");
-      const cb = document.createElement("input");
-      cb.type = "checkbox"; cb.checked = done.has(n);
-      cb.addEventListener("change", ()=>{
-        if(cb.checked) done.add(n); else done.delete(n);
-        row.classList.toggle("done", cb.checked);
-        saveProgress(); updateProgress();
-        const c = sec.querySelector(".c");
-        const dd = chunk.filter(x=>done.has(x)).length;
-        c.textContent = `${dd}/${chunk.length} done`;
-      });
-      const a = document.createElement("a");
-      a.href = igUrl(n); a.target = "_blank"; a.rel = "noopener"; a.textContent = n;
-      const go = document.createElement("span");
-      go.className = "go"; go.textContent = "Open ↗";
-      row.append(cb, a, go);
-      host.appendChild(sec).appendChild(row);
-    }
+    for(const n of chunk) sec.appendChild(rowEl(n, chunk, sec));
+    host.appendChild(sec);
   }
   if(!host.children.length){
     host.innerHTML = '<p class="small">No matches.</p>';
   }
+}
+
+function rowEl(n, chunk, sec){
+  const row = document.createElement("div");
+  row.className = "row" + (done.has(n) ? " done" : "");
+
+  const cb = document.createElement("input");
+  cb.type = "checkbox"; cb.checked = done.has(n); cb.title = "Mark as unfollowed";
+  cb.addEventListener("change", ()=>{
+    if(cb.checked) done.add(n); else done.delete(n);
+    row.classList.toggle("done", cb.checked);
+    saveDone(); updateProgress();
+    const c = sec.querySelector(".c");
+    c.textContent = `${chunk.filter(x=>done.has(x)).length}/${chunk.length} done`;
+  });
+
+  const a = document.createElement("a");
+  a.className = "name"; a.href = igUrl(n); a.target = "_blank"; a.rel = "noopener"; a.textContent = n;
+
+  const open = document.createElement("a");
+  open.className = "iconbtn"; open.textContent = "Open ↗";
+  open.title = isMobile ? "Open in Instagram app" : "Open profile";
+  open.href = isMobile ? igAppUrl(n) : igUrl(n);
+  if(!isMobile){ open.target = "_blank"; open.rel = "noopener"; }
+
+  const keepBtn = document.createElement("button");
+  keepBtn.className = "iconbtn keep"; keepBtn.type = "button"; keepBtn.textContent = "📌";
+  keepBtn.title = "Keep this account (remove from list)";
+  keepBtn.addEventListener("click", ()=>{
+    kept.add(n); done.delete(n); saveKept(); saveDone();
+    recompute(); buildList($("search").value); updateProgress(); renderKept();
+  });
+
+  row.append(cb, a, open, keepBtn);
+  return row;
 }
 
 function updateProgress(){
@@ -379,13 +559,37 @@ function updateProgress(){
   const cap = $("capTxt");
   if(remaining > 0){
     cap.textContent = `About ${days} day${days===1?"":"s"} left at ${BATCH}/day. Keep it under ~120 a day.`;
-    cap.classList.remove("warn");
   } else {
     cap.textContent = "All done. Nice work.";
   }
 }
 
-/* ---------- downloads ---------- */
+/* ---------- kept manager ---------- */
+function renderKept(){
+  const box = $("keptBox");
+  if(!box.classList.contains("hidden")){
+    if(kept.size === 0){ box.classList.add("hidden"); return; }
+    let html = `<b>Kept accounts (${kept.size})</b> — tap to put back on the list:<div style="margin-top:6px">`;
+    for(const n of [...kept].sort((a,b)=>a.localeCompare(b))){
+      html += `<button class="iconbtn" data-restore="${esc(n)}" style="margin:3px 4px 0 0">${esc(n)} ✕</button>`;
+    }
+    html += `</div>`;
+    box.innerHTML = html;
+    box.querySelectorAll("[data-restore]").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        kept.delete(b.getAttribute("data-restore")); saveKept();
+        recompute(); buildList($("search").value); updateProgress(); renderKept();
+      });
+    });
+  }
+}
+$("showKept").addEventListener("click", ()=>{
+  const box = $("keptBox");
+  box.classList.toggle("hidden");
+  renderKept();
+});
+
+/* ---------- downloads (use working list) ---------- */
 function download(filename, text, type){
   const blob = new Blob([text], {type});
   const url = URL.createObjectURL(blob);
@@ -394,7 +598,7 @@ function download(filename, text, type){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
-function esc(s){ return s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 function buildHtml(){
   const total = names.length;
@@ -444,9 +648,15 @@ $("dlCsv").addEventListener("click", ()=>download("not_following_back.csv", buil
 $("dlTxt").addEventListener("click", ()=>download("not_following_back.txt", names.join("\n"), "text/plain"));
 
 $("search").addEventListener("input", e=>buildList(e.target.value));
+$("sort").addEventListener("change", e=>{ curSort = e.target.value; recompute(); buildList($("search").value); updateProgress(); });
 $("resetProg").addEventListener("click", ()=>{
-  if(confirm("Clear all your checkmarks?")){ done = new Set(); saveProgress(); buildList($("search").value); updateProgress(); }
+  if(confirm("Clear all your checkmarks? (Your kept list stays.)")){ done = new Set(); saveDone(); buildList($("search").value); updateProgress(); }
 });
+
+/* ---------- offline support ---------- */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+}
 </script>
 </body>
 </html>
