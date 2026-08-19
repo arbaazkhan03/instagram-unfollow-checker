@@ -10,6 +10,19 @@ and is never uploaded to any server.
 
 ---
 
+## Features
+
+- 🔒 **100% private** — all processing happens in your browser; nothing is uploaded, no login, no password.
+- 📱 **Works on your phone** — installable to your home screen and works offline (PWA).
+- 📋 **Clickable list** with direct profile links, split into safe **~120/day batches**.
+- ✅ **Saved progress** — check off accounts as you unfollow; your progress is remembered.
+- 📌 **Keep-list** — mark accounts you follow on purpose (celebs, brands) so they're removed from the list and don't count.
+- 🔎 **Search & sort** — filter by username, or sort A→Z, Z→A, most-recently-followed, or oldest first.
+- 🚀 **One-tap open** — jumps straight into the Instagram app on mobile, ready to unfollow.
+- 🤖 **Follow activity check** — flags whether your follows show automated/bot bursts.
+- ⬇️ **Export** your list as HTML (clickable), CSV, or TXT.
+- 🌗 **Light & dark mode.**
+
 ## Two ways to use it
 
 ### 1. Web app (easiest — works on phone)
@@ -76,3 +89,25 @@ affiliated with, endorsed by, or connected to Instagram or Meta. You are
 responsible for how you use it — including respecting Instagram's Terms of
 Service and unfollowing at a sensible pace (~100–120/day). The author is not
 liable for any account limits, blocks, or other issues that may result.
+
+---
+
+## Links & resources
+
+**This project**
+- 🌐 [Live web app](https://arbaazkhan03.github.io/instagram-unfollow-checker/)
+- 💻 [Source code (GitHub)](https://github.com/arbaazkhan03/instagram-unfollow-checker)
+- 🐞 [Report an issue / suggest a feature](https://github.com/arbaazkhan03/instagram-unfollow-checker/issues)
+- 📄 [License (MIT)](LICENSE)
+
+**Official Instagram help**
+- [Download your information](https://www.instagram.com/download/request/)
+- [About downloading your data](https://help.instagram.com/181231772500920)
+- [Terms of Use](https://help.instagram.com/581066165581870)
+- [Community Guidelines](https://help.instagram.com/477434105621119)
+
+**Reach out**
+- Instagram: [@just_an_engineer.mlk](https://www.instagram.com/just_an_engineer.mlk)
+- LinkedIn: [arbaaz-khan03](https://www.linkedin.com/in/arbaaz-khan03/)
+
+<sub>Made with care by Arbaaz. Not affiliated with Instagram or Meta.</sub>
