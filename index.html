@@ -286,6 +286,13 @@
     </div>
   </section>
 
+  <!-- YOUR INSTAGRAM IN NUMBERS -->
+  <section id="numbersCard" class="card hidden">
+    <h2>Your Instagram in numbers</h2>
+    <div class="stats" id="numbersStats"></div>
+    <p class="small" style="margin-top:8px">Based on the activity Instagram included in your export (usually a recent window, not your whole history).</p>
+  </section>
+
   <!-- SAFETY -->
   <section id="safetyCard" class="card hidden">
     <h2>3. Unfollow safely</h2>
@@ -367,6 +374,8 @@ let curSort = "az";
 let demoMode = false;
 let mutualsCount = 0;
 let fansList = [];
+let igNumbers = { postsViewed:null, videosWatched:null, searches:null };
+let ioObserver = null;
 
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -432,10 +441,19 @@ function parseFollowingWithTs(obj){
 }
 
 /* ---------- ingest ---------- */
+function arrCount(obj){
+  if(Array.isArray(obj)) return obj.length;
+  if(obj && typeof obj === "object"){
+    for(const v of Object.values(obj)) if(Array.isArray(v)) return v.length;
+  }
+  return null;
+}
+
 async function handleFiles(fileList){
   clearErr();
   demoMode = false;
   $("demoBanner").classList.add("hidden");
+  igNumbers = { postsViewed:null, videosWatched:null, searches:null };
   const files = [...fileList];
   if(files.length === 0) return;
 
@@ -459,7 +477,10 @@ async function handleFiles(fileList){
         let obj;
         try{ obj = JSON.parse(await f.text()); }
         catch{ showErr("Couldn't read <b>"+esc(f.name)+"</b> — it doesn't look like valid JSON. Make sure you chose JSON format when downloading."); return; }
-        if(/following/i.test(lower) || obj.relationships_following) followingObj = obj;
+        if(/posts_viewed/i.test(lower)) igNumbers.postsViewed = arrCount(obj);
+        else if(/videos_watched/i.test(lower)) igNumbers.videosWatched = arrCount(obj);
+        else if(/recent_searches/i.test(lower)) igNumbers.searches = arrCount(obj);
+        else if(/following/i.test(lower) || obj.relationships_following) followingObj = obj;
         else if(/followers/i.test(lower) || obj.relationships_followers || Array.isArray(obj)) followerObjs.push(obj);
         else followerObjs.push(obj);
       }
@@ -519,6 +540,12 @@ async function readZip(file){
       jobs.push(entry.async("string").then(t=>{ res.following = JSON.parse(t); }));
     } else if(/followers_?\d*\.json$/.test(p) || p.includes("followers_and_following/followers")){
       jobs.push(entry.async("string").then(t=>{ res.followers.push(JSON.parse(t)); }));
+    } else if(p.endsWith("posts_viewed.json")){
+      jobs.push(entry.async("string").then(t=>{ igNumbers.postsViewed = arrCount(JSON.parse(t)); }));
+    } else if(p.endsWith("videos_watched.json")){
+      jobs.push(entry.async("string").then(t=>{ igNumbers.videosWatched = arrCount(JSON.parse(t)); }));
+    } else if(p.endsWith("recent_searches.json")){
+      jobs.push(entry.async("string").then(t=>{ igNumbers.searches = arrCount(JSON.parse(t)); }));
     }
   });
   await Promise.all(jobs);
@@ -638,6 +665,20 @@ $("fansToggle").addEventListener("click", ()=>{
   else { box.classList.add("hidden"); $("fansToggle").textContent = "Show fans list"; }
 });
 
+/* ---------- Your Instagram in numbers ---------- */
+function buildNumbers(){
+  const items = [];
+  if(igNumbers.postsViewed != null)  items.push(["Posts viewed", igNumbers.postsViewed]);
+  if(igNumbers.videosWatched != null) items.push(["Reels watched", igNumbers.videosWatched]);
+  if(igNumbers.searches != null)      items.push(["Recent searches", igNumbers.searches]);
+  const card = $("numbersCard");
+  if(items.length === 0){ card.classList.add("hidden"); return; }
+  $("numbersStats").innerHTML = items.map(([l,n]) =>
+    `<div class="stat"><div class="n">${n.toLocaleString()}</div><div class="l">${l}</div></div>`
+  ).join("");
+  card.classList.remove("hidden");
+}
+
 /* ---------- working list ---------- */
 function recompute(){
   names = allNotBack.filter(n => !kept.has(n));
@@ -663,6 +704,7 @@ function render(){
   [...$("sort").options].forEach(o=>{ if((o.value==="recent"||o.value==="oldest")) o.disabled = !hasTs; });
   recompute();
   buildInsights();
+  buildNumbers();
   updateProgress();
   buildList("");
   $("search").value = "";
@@ -672,23 +714,54 @@ function render(){
 function igUrl(name){ return "https://www.instagram.com/" + encodeURIComponent(name); }
 function igAppUrl(name){ return "instagram://user?username=" + encodeURIComponent(name); }
 
+function renderDaySection(host, dayNum, rows){
+  const sec = document.createElement("div");
+  sec.className = "day";
+  const doneInDay = rows.filter(n=>done.has(n)).length;
+  sec.innerHTML = `<h3>Day ${dayNum} <span class="c">${doneInDay}/${rows.length} done</span></h3>`;
+  for(const n of rows) sec.appendChild(rowEl(n, rows, sec));
+  host.appendChild(sec);
+}
+
 function buildList(filter){
   const host = $("list");
   host.innerHTML = "";
+  if(ioObserver){ ioObserver.disconnect(); ioObserver = null; }
+
   const f = (filter||"").trim().toLowerCase();
+  // group into day buckets (fixed blocks of BATCH), filtered by search
+  const days = [];
   for(let i=0;i<names.length;i+=BATCH){
-    const day = i/BATCH + 1;
-    const chunk = names.slice(i, i+BATCH).filter(n => !f || n.toLowerCase().includes(f));
-    if(chunk.length === 0) continue;
-    const sec = document.createElement("div");
-    sec.className = "day";
-    const doneInDay = chunk.filter(n=>done.has(n)).length;
-    sec.innerHTML = `<h3>Day ${day} <span class="c">${doneInDay}/${chunk.length} done</span></h3>`;
-    for(const n of chunk) sec.appendChild(rowEl(n, chunk, sec));
-    host.appendChild(sec);
+    const rows = names.slice(i, i+BATCH).filter(n => !f || n.toLowerCase().includes(f));
+    if(rows.length) days.push({ dayNum: i/BATCH + 1, rows });
   }
-  if(!host.children.length){
-    host.innerHTML = '<p class="small">No matches.</p>';
+  if(days.length === 0){ host.innerHTML = '<p class="small">No matches.</p>'; return; }
+
+  // lazy render: show a few day-sections now, load more as the user scrolls
+  let rendered = 0;
+  const INITIAL = 3, STEP = 2;
+  function renderNext(count){
+    for(let k=0; k<count && rendered<days.length; k++){
+      renderDaySection(host, days[rendered].dayNum, days[rendered].rows);
+      rendered++;
+    }
+  }
+  renderNext(INITIAL);
+
+  if(rendered < days.length && "IntersectionObserver" in window){
+    const sentinel = document.createElement("div");
+    sentinel.style.height = "1px";
+    host.appendChild(sentinel);
+    ioObserver = new IntersectionObserver(entries => {
+      if(!entries[0].isIntersecting) return;
+      renderNext(STEP);
+      if(rendered >= days.length){ ioObserver.disconnect(); ioObserver = null; sentinel.remove(); }
+      else host.appendChild(sentinel);   // move sentinel back to the end
+    }, { rootMargin: "600px" });
+    ioObserver.observe(sentinel);
+  } else if(rendered < days.length){
+    // no IntersectionObserver support: render the rest
+    renderNext(days.length);
   }
 }
 
@@ -1009,6 +1082,7 @@ function loadDemo(){
 
   $("sFollowing").textContent = allNotBack.length + mutualsCount;      // 340 + 190
   $("sFollowers").textContent = mutualsCount + fansList.length;        // 190 + 470
+  igNumbers = { postsViewed: 4230, videosWatched: 9814, searches: 63 };
 
   done = new Set(); kept = new Set();
   buildBotAnalysis(demoFollowingObj);
