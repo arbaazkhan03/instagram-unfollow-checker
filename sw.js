@@ -1,6 +1,6 @@
 /* Service worker for Instagram Unfollow Checker.
    Network-first for the page (so updates show up), cache-first for static assets. */
-const CACHE = "iuc-v1";
+const CACHE = "iuc-v2";
 const ASSETS = [
   "./",
   "./index.html",

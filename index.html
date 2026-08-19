@@ -151,6 +151,11 @@
   .hidden{display:none}
   a.tlink{color:var(--link)}
   footer{text-align:center;color:var(--muted);font-size:.78rem;margin-top:26px}
+  .sitelinks{border-top:1px solid var(--line);margin-top:28px;padding-top:18px}
+  .sitelinks .col{margin-bottom:14px}
+  .sitelinks .h{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
+  .sitelinks a{display:inline-block;color:var(--link);text-decoration:none;font-size:.86rem;margin:0 8px 4px 0}
+  .sitelinks a:hover{text-decoration:underline}
   .burst{font-size:.85rem;margin:4px 0;color:var(--muted)}
   .burst b{color:var(--txt)}
 </style>
@@ -244,9 +249,34 @@
   </section>
 
   <footer>
-    Your data is processed locally in your browser and never sent anywhere.<br>
-    Not affiliated with Instagram or Meta.<br>
-    <span style="opacity:.85">Created by <a class="tlink" href="https://www.instagram.com/just_an_engineer.mlk" target="_blank" rel="noopener">Arbaaz</a></span>
+    <div class="sitelinks">
+      <div class="col">
+        <div class="h">Get your data</div>
+        <a href="https://www.instagram.com/download/request/" target="_blank" rel="noopener">Download your Instagram data ↗</a>
+        <a href="https://help.instagram.com/181231772500920" target="_blank" rel="noopener">How data download works ↗</a>
+      </div>
+      <div class="col">
+        <div class="h">This project</div>
+        <a href="https://github.com/arbaazkhan03/instagram-unfollow-checker" target="_blank" rel="noopener">Source code ↗</a>
+        <a href="https://github.com/arbaazkhan03/instagram-unfollow-checker/issues" target="_blank" rel="noopener">Report an issue ↗</a>
+        <a href="https://github.com/arbaazkhan03/instagram-unfollow-checker/blob/main/LICENSE" target="_blank" rel="noopener">License (MIT) ↗</a>
+      </div>
+      <div class="col">
+        <div class="h">Instagram help</div>
+        <a href="https://help.instagram.com/581066165581870" target="_blank" rel="noopener">Terms of Use ↗</a>
+        <a href="https://help.instagram.com/477434105621119" target="_blank" rel="noopener">Community Guidelines ↗</a>
+      </div>
+      <div class="col">
+        <div class="h">Reach out</div>
+        <a href="https://www.instagram.com/just_an_engineer.mlk" target="_blank" rel="noopener">Instagram ↗</a>
+        <a href="https://www.linkedin.com/in/arbaaz-khan03/" target="_blank" rel="noopener">LinkedIn ↗</a>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      Your data is processed locally in your browser and never sent anywhere.<br>
+      Not affiliated with Instagram or Meta.<br>
+      <span style="opacity:.85">Created by <a class="tlink" href="https://www.instagram.com/just_an_engineer.mlk" target="_blank" rel="noopener">Arbaaz</a></span>
+    </div>
   </footer>
 </div>
 
